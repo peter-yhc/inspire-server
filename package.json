@@ -21,6 +21,7 @@
   "homepage": "https://github.com/peter-yhc/inspire-server#readme",
   "dependencies": {
     "@koa/router": "^10.1.1",
+    "firebase-admin": "^10.0.0",
     "koa": "^2.13.4",
     "koa-bodyparser": "^4.3.0"
   },
