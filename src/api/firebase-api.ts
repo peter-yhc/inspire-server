@@ -1,5 +1,6 @@
 import * as admin from 'firebase-admin';
-import { IProject } from './data-interfaces';
+import { IProject, IProjectRoleMapping, ProjectRole } from './data-interfaces';
+import { v4 as uuidv4 } from 'uuid';
 
 // eslint-disable-next-line import/no-absolute-path
 const serviceAccount = require('D:\\inspire-dev.json');
@@ -12,11 +13,12 @@ const app = admin.initializeApp(options);
 const db = admin.firestore(app);
 
 async function getProjects(userId: string): Promise<IProject[]> {
-  const projectPermissions = await db.collection('ProjectPermissions')
+  const projectRoleMappings = await db.collection('ProjectRoleMappings')
     .where('userId', '==', userId)
     .get();
 
-  const projectUuids = projectPermissions.docs.map((projectPermission) => projectPermission.get('projectId'));
+  const projectUuids = projectRoleMappings.docs
+    .map((projectRoleMapping) => projectRoleMapping.data().projectUuid);
   const projectSnapshot = await db.collection('Projects')
     .where('uuid', 'in', projectUuids)
     .get();
@@ -24,6 +26,20 @@ async function getProjects(userId: string): Promise<IProject[]> {
   return projectSnapshot.docs.map((project) => project.data()) as IProject[];
 }
 
+async function createProject(userId: string, name: string, role: ProjectRole): Promise<IProject> {
+  const projectUuid = uuidv4();
+  await db.collection('Projects').add({ name, uuid: projectUuid, collections: [] });
+  await db.collection('ProjectRoleMappings')
+    .add({ userId, projectUuid, role } as IProjectRoleMapping);
+
+  return {
+    name,
+    uuid: projectUuid,
+    collections: [],
+  };
+}
+
 export {
+  createProject,
   getProjects,
 };

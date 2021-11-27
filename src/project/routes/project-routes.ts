@@ -1,18 +1,19 @@
 import Router from '@koa/router';
 import { ICreateCollection, ICreateProject, ICreateSubCollection } from './request-interfaces';
-import { getProjects } from '../../api/firebase-api';
+import { createProject, getProjects } from '../../api/firebase-api';
 
 const projectRouter = new Router({ prefix: '/projects' });
+const userId = '3z3hoEDHoQfbLZ0gPp8J4o1JpcB3';
 
 projectRouter.get('/', async (context) => {
-  const projects = await getProjects('3z3hoEDHoQfbLZ0gPp8J4o1JpcB3');
+  const projects = await getProjects(userId);
   context.body = JSON.stringify(projects);
 });
 
-projectRouter.post('/', (context) => {
+projectRouter.post('/', async (context) => {
   const request = context.request.body as ICreateProject;
 
-  context.body = request.name; // use ID generated from DB
+  context.body = await createProject(userId, request.name, 'Owner');
 });
 
 projectRouter.post('/projects/:projectId/collections', (context) => {

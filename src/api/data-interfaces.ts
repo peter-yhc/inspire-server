@@ -14,3 +14,11 @@ export interface IProject {
   uuid: string;
   collections: ICollection[]
 }
+
+export interface IProjectRoleMapping {
+  userId: string;
+  projectUuid: string;
+  role: string;
+}
+
+export type ProjectRole = 'Owner' | 'Editor' | 'Observer';
