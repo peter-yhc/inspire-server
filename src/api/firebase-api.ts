@@ -11,6 +11,25 @@ const options = process.env.NODE_ENV !== 'production'
 
 const app = admin.initializeApp(options);
 const db = admin.firestore(app);
+const auth = admin.auth(app);
+
+async function checkProjectRole(userId: string, projectUuid: string, role: ProjectRole) {
+  const projectRoleMappings = await db.collection('ProjectRoleMappings')
+      .where('userId', '==', userId)
+      .where('projectUuid', '==', projectUuid)
+      .where('role', '==', role)
+      .get();
+
+  return !!projectRoleMappings.docs.pop();
+}
+
+async function isOwner(userId: string, projectUuid: string) {
+  return checkProjectRole(userId, projectUuid, 'Owner')
+}
+
+async function isObserver(userId: string, projectUuid: string) {
+  return checkProjectRole(userId, projectUuid, 'Observer')
+}
 
 async function getProjects(userId: string): Promise<IProject[]> {
   const projectRoleMappings = await db.collection('ProjectRoleMappings')
@@ -39,7 +58,52 @@ async function createProject(userId: string, name: string, role: ProjectRole): P
   };
 }
 
+async function addProjectUser(userEmail: string, projectUuid: string, role: ProjectRole): Promise<void> {
+  const user = await auth.getUserByEmail(userEmail);
+  const userProjectMappingSnapshot = await db.collection('ProjectRoleMappings')
+    .where('userId', '==', user.uid)
+    .where('projectUuid', '==', projectUuid)
+    .get();
+
+  const userMappingId = userProjectMappingSnapshot.docs.pop()?.id;
+  if (userMappingId) {
+    await db.collection('ProjectRoleMappings').doc(userMappingId).set({
+      userId: user.uid,
+      projectUuid,
+      role,
+    } as IProjectRoleMapping);
+  } else {
+    await db.collection('ProjectRoleMappings').add({
+      userId: user.uid,
+      projectUuid,
+      role,
+    } as IProjectRoleMapping);
+  }
+}
+
+async function removeProjectUser(userEmail: string, projectUuid: string): Promise<void> {
+  const user = await auth.getUserByEmail(userEmail);
+
+  const userMappingSnapshot = await db.collection('ProjectRoleMappings')
+    .where('userId', '==', user.uid)
+    .where('projectUuid', '==', projectUuid)
+    .get();
+
+  const userMappingId = userMappingSnapshot.docs.pop()?.id;
+  if (userMappingId) {
+    await db.collection('ProjectRoleMappings').doc(userMappingId).delete();
+  }
+}
+
+async function createCollection() {
+
+}
+
 export {
+  isOwner,
+  isObserver,
   createProject,
   getProjects,
+  addProjectUser,
+  removeProjectUser,
 };

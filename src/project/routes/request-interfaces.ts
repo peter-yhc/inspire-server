@@ -1,3 +1,5 @@
+import { ProjectRole } from '../../api/data-interfaces';
+
 export interface ICreateProject {
   name: string;
 }
@@ -8,4 +10,13 @@ export interface ICreateCollection {
 
 export interface ICreateSubCollection {
   name: string;
+}
+
+export interface IAddUserToProject {
+  userEmail: string;
+  role: ProjectRole;
+}
+
+export interface IRemoveUserFromProject {
+  userEmail: string;
 }
