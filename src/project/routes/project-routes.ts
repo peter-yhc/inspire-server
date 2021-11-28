@@ -28,62 +28,62 @@ projectRouter.post('/', async (context) => {
   context.status = 201;
 });
 
-projectRouter.post('/:projectUuid/users', async (context) => {
+projectRouter.post('/:projectUid/users', async (context) => {
   const request = context.request.body as IAddUserToProject;
-  if (!await isOwner(userId, context.params.projectUuid)) {
+  if (!await isOwner(userId, context.params.projectUid)) {
     context.status = 401;
     return;
   }
 
-  await addProjectUser(request.userEmail, context.params.projectUuid, request.role);
+  await addProjectUser(request.userEmail, context.params.projectUid, request.role);
   context.status = 201;
 });
 
-projectRouter.delete('/:projectUuid/users', async (context) => {
+projectRouter.delete('/:projectUid/users', async (context) => {
   const request = context.request.body as IRemoveUserFromProject;
-  if (!await isOwner(userId, context.params.projectUuid)) {
+  if (!await isOwner(userId, context.params.projectUid)) {
     context.status = 401;
     return;
   }
-  await removeProjectUser(request.userEmail, context.params.projectUuid);
+  await removeProjectUser(request.userEmail, context.params.projectUid);
   context.status = 200;
 });
 
-projectRouter.post('/:projectUuid/collections', async (context) => {
+projectRouter.post('/:projectUid/collections', async (context) => {
   const request = context.request.body as ICreateCollection;
-  if (await isObserver(userId, context.params.projectUuid)) {
+  if (await isObserver(userId, context.params.projectUid)) {
     context.status = 401;
     return;
   }
-  await createCollection(context.params.projectUuid, request.name);
+  await createCollection(context.params.projectUid, request.name);
   context.status = 201;
 });
 
-projectRouter.delete('/:projectUuid/collections/:collectionUuid', async (context) => {
-  if (await isObserver(userId, context.params.projectUuid)) {
+projectRouter.delete('/:projectUid/collections/:collectionUid', async (context) => {
+  if (await isObserver(userId, context.params.projectUid)) {
     context.status = 401;
     return;
   }
-  await removeCollection(context.params.projectUuid, context.params.collectionUuid);
+  await removeCollection(context.params.projectUid, context.params.collectionUid);
   context.status = 200;
 });
 
-projectRouter.post('/:projectUuid/collections/:collectionUuid/focuses', async (context) => {
+projectRouter.post('/:projectUid/collections/:collectionUid/focuses', async (context) => {
   const request = context.request.body as ICreateFocus;
-  if (await isObserver(userId, context.params.projectUuid)) {
+  if (await isObserver(userId, context.params.projectUid)) {
     context.status = 401;
     return;
   }
-  await createFocus(context.params.projectUuid, context.params.collectionUuid, request.name);
+  await createFocus(context.params.projectUid, context.params.collectionUid, request.name);
   context.status = 201;
 });
 
-projectRouter.delete('/:projectUuid/collections/:collectionUuid/focuses/:focusUuid', async (context) => {
-  if (await isObserver(userId, context.params.projectUuid)) {
+projectRouter.delete('/:projectUid/collections/:collectionUid/focuses/:focusUid', async (context) => {
+  if (await isObserver(userId, context.params.projectUid)) {
     context.status = 401;
     return;
   }
-  await removeFocus(context.params.projectUuid, context.params.collectionUuid, context.params.focusUuid);
+  await removeFocus(context.params.projectUid, context.params.collectionUid, context.params.focusUid);
   context.status = 200;
 });
 

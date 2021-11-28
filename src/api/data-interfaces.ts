@@ -7,31 +7,31 @@ export enum DatabaseCollections {
 
 export interface IFocus {
   name: string;
-  uuid: string;
+  uid: string;
 }
 
 export interface ICollection {
   name: string;
-  uuid: string;
+  uid: string;
   focuses: IFocus[];
 }
 
 export interface IProject {
   name: string;
-  uuid: string;
+  uid: string;
   collections: ICollection[]
 }
 
 export interface IProjectRoleMapping {
   userId: string;
-  projectUuid: string;
+  projectUid: string;
   role: string;
 }
 
 export interface IImage {
-  parentUuid: string;
+  locationUid: string;
   src: string;
-  hash: string;
+  uid: string;
   comment?: string;
   metadata?: {
     favourite: boolean;

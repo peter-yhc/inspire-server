@@ -1,9 +1,9 @@
 import * as admin from 'firebase-admin';
 import {
-  DatabaseCollections, IFocus, IProject, IProjectRoleMapping, ProjectRole,
+  DatabaseCollections, IFocus, IImage, IProject, IProjectRoleMapping, ProjectRole,
 } from './data-interfaces';
-import { v4 as uuidv4 } from 'uuid';
 import { firestore } from 'firebase-admin';
+import { nanoid } from 'nanoid';
 import QueryDocumentSnapshot = firestore.QueryDocumentSnapshot;
 import DocumentData = firestore.DocumentData;
 
@@ -18,27 +18,27 @@ const app = admin.initializeApp(options);
 const db = admin.firestore(app);
 const auth = admin.auth(app);
 
-async function checkProjectRole(userId: string, projectUuid: string, role: ProjectRole) {
+async function checkProjectRole(userId: string, projectUid: string, role: ProjectRole) {
   const projectRoleMappings = await db.collection(DatabaseCollections.ProjectRoleMappings)
     .where('userId', '==', userId)
-    .where('projectUuid', '==', projectUuid)
+    .where('projectUid', '==', projectUid)
     .where('role', '==', role)
     .get();
 
   return !!projectRoleMappings.docs.pop();
 }
 
-async function isOwner(userId: string, projectUuid: string) {
-  return checkProjectRole(userId, projectUuid, 'Owner');
+async function isOwner(userId: string, projectUid: string) {
+  return checkProjectRole(userId, projectUid, 'Owner');
 }
 
-async function isObserver(userId: string, projectUuid: string) {
-  return checkProjectRole(userId, projectUuid, 'Observer');
+async function isObserver(userId: string, projectUid: string) {
+  return checkProjectRole(userId, projectUid, 'Observer');
 }
 
-async function getProjectDocument(projectUuid: string): Promise<QueryDocumentSnapshot<DocumentData> | undefined> {
+async function getProjectDocument(projectUid: string): Promise<QueryDocumentSnapshot<DocumentData> | undefined> {
   const projectSnapshot = await db.collection(DatabaseCollections.Projects)
-    .where('uuid', '==', projectUuid)
+    .where('uid', '==', projectUid)
     .get();
 
   return projectSnapshot.docs.pop();
@@ -49,57 +49,57 @@ async function getProjects(userId: string): Promise<IProject[]> {
     .where('userId', '==', userId)
     .get();
 
-  const projectUuids = projectRoleMappings.docs
-    .map((projectRoleMapping) => projectRoleMapping.data().projectUuid);
+  const projectUids = projectRoleMappings.docs
+    .map((projectRoleMapping) => projectRoleMapping.data().projectUid);
   const projectSnapshot = await db.collection(DatabaseCollections.Projects)
-    .where('uuid', 'in', projectUuids)
+    .where('uid', 'in', projectUids)
     .get();
 
   return projectSnapshot.docs.map((project) => project.data()) as IProject[];
 }
 
 async function createProject(userId: string, name: string, role: ProjectRole): Promise<IProject> {
-  const projectUuid = uuidv4();
-  await db.collection(DatabaseCollections.Projects).add({ name, uuid: projectUuid, collections: [] });
+  const projectUid = nanoid();
+  await db.collection(DatabaseCollections.Projects).add({ name, uid: projectUid, collections: [] });
   await db.collection(DatabaseCollections.ProjectRoleMappings)
-    .add({ userId, projectUuid, role } as IProjectRoleMapping);
+    .add({ userId, projectUid, role } as IProjectRoleMapping);
 
   return {
     name,
-    uuid: projectUuid,
+    uid: projectUid,
     collections: [],
   };
 }
 
-async function addProjectUser(userEmail: string, projectUuid: string, role: ProjectRole): Promise<void> {
+async function addProjectUser(userEmail: string, projectUid: string, role: ProjectRole): Promise<void> {
   const user = await auth.getUserByEmail(userEmail);
   const userProjectMappingSnapshot = await db.collection(DatabaseCollections.ProjectRoleMappings)
     .where('userId', '==', user.uid)
-    .where('projectUuid', '==', projectUuid)
+    .where('projectUid', '==', projectUid)
     .get();
 
   const userMappingId = userProjectMappingSnapshot.docs.pop()?.id;
   if (userMappingId) {
     await db.collection(DatabaseCollections.ProjectRoleMappings).doc(userMappingId).set({
       userId: user.uid,
-      projectUuid,
+      projectUid,
       role,
     } as IProjectRoleMapping);
   } else {
     await db.collection(DatabaseCollections.ProjectRoleMappings).add({
       userId: user.uid,
-      projectUuid,
+      projectUid,
       role,
     } as IProjectRoleMapping);
   }
 }
 
-async function removeProjectUser(userEmail: string, projectUuid: string): Promise<void> {
+async function removeProjectUser(userEmail: string, projectUid: string): Promise<void> {
   const user = await auth.getUserByEmail(userEmail);
 
   const userMappingSnapshot = await db.collection(DatabaseCollections.ProjectRoleMappings)
     .where('userId', '==', user.uid)
-    .where('projectUuid', '==', projectUuid)
+    .where('projectUid', '==', projectUid)
     .get();
 
   const userMappingId = userMappingSnapshot.docs.pop()?.id;
@@ -108,9 +108,9 @@ async function removeProjectUser(userEmail: string, projectUuid: string): Promis
   }
 }
 
-async function createCollection(projectUuid: string, collectionName: string) {
+async function createCollection(projectUid: string, collectionName: string) {
   const projectSnapshot = await db.collection(DatabaseCollections.Projects)
-    .where('uuid', '==', projectUuid)
+    .where('uid', '==', projectUid)
     .get();
 
   const projectDoc = projectSnapshot.docs.pop();
@@ -118,41 +118,41 @@ async function createCollection(projectUuid: string, collectionName: string) {
     throw new Error('Project does not exist.');
   }
   const project = projectDoc.data() as IProject;
-  project.collections = [...project.collections, { name: collectionName, uuid: uuidv4(), focuses: [] }];
+  project.collections = [...project.collections, { name: collectionName, uid: nanoid(), focuses: [] }];
 
   await db.collection(DatabaseCollections.Projects).doc(projectDoc.id).set(project);
 }
 
-async function removeCollection(projectUuid: string, collectionUuid: string) {
-  const projectDoc = await getProjectDocument(projectUuid);
+async function removeCollection(projectUid: string, collectionUid: string) {
+  const projectDoc = await getProjectDocument(projectUid);
   if (!projectDoc) {
     throw new Error('Project does not exist.');
   }
   const project = projectDoc.data() as IProject;
-  project.collections = project.collections.filter((collection) => collection.uuid !== collectionUuid);
+  project.collections = project.collections.filter((collection) => collection.uid !== collectionUid);
 
   await db.collection(DatabaseCollections.Projects).doc(projectDoc.id).set(project);
 }
 
-async function createFocus(projectUuid: string, collectionUuid: string, focusName: string) {
-  const projectDoc = await getProjectDocument(projectUuid);
+async function createFocus(projectUid: string, collectionUid: string, focusName: string) {
+  const projectDoc = await getProjectDocument(projectUid);
   if (!projectDoc) {
     throw new Error('Project does not exist.');
   }
   const project = projectDoc.data() as IProject;
-  const collection = project.collections.find((collection) => collection.uuid === collectionUuid);
+  const collection = project.collections.find((collection) => collection.uid === collectionUid);
 
   if (!collection) {
     throw new Error('Collection does not exist.');
   }
-  collection.focuses.push({ name: focusName, uuid: uuidv4() } as IFocus);
+  collection.focuses.push({ name: focusName, uid: nanoid() } as IFocus);
 
   await db.collection(DatabaseCollections.Projects).doc(projectDoc.id).set(project);
 }
 
-async function removeFocus(projectUuid: string, collectionUuid: string, focusUuid: string) {
+async function removeFocus(projectUid: string, collectionUid: string, focusUid: string) {
   const projectSnapshot = await db.collection(DatabaseCollections.Projects)
-    .where('uuid', '==', projectUuid)
+    .where('uid', '==', projectUid)
     .get();
 
   const projectDoc = projectSnapshot.docs.pop();
@@ -160,16 +160,22 @@ async function removeFocus(projectUuid: string, collectionUuid: string, focusUui
     throw new Error('Project does not exist.');
   }
   const project = projectDoc.data() as IProject;
-  const collection = project.collections.find((collection) => collection.uuid === collectionUuid);
+  const collection = project.collections.find((collection) => collection.uid === collectionUid);
 
   if (!collection) {
     throw new Error('Collection does not exist.');
   }
-  collection.focuses.filter((focus) => focus.uuid !== focusUuid);
+  collection.focuses.filter((focus) => focus.uid !== focusUid);
 
   await db.collection(DatabaseCollections.Projects).doc(projectDoc.id).set(project);
 }
 
+async function uploadImage(locationUid: string, src: string) {
+  db.collection(DatabaseCollections.Images).add({
+    src,
+
+  } as IImage);
+}
 export {
   isOwner,
   isObserver,
