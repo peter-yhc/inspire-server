@@ -3,6 +3,9 @@ import {
   DatabaseCollections, IFocus, IProject, IProjectRoleMapping, ProjectRole,
 } from './data-interfaces';
 import { v4 as uuidv4 } from 'uuid';
+import { firestore } from 'firebase-admin';
+import QueryDocumentSnapshot = firestore.QueryDocumentSnapshot;
+import DocumentData = firestore.DocumentData;
 
 // eslint-disable-next-line import/no-absolute-path
 const serviceAccount = require('D:\\inspire-dev.json');
@@ -31,6 +34,14 @@ async function isOwner(userId: string, projectUuid: string) {
 
 async function isObserver(userId: string, projectUuid: string) {
   return checkProjectRole(userId, projectUuid, 'Observer');
+}
+
+async function getProjectDocument(projectUuid: string): Promise<QueryDocumentSnapshot<DocumentData> | undefined> {
+  const projectSnapshot = await db.collection(DatabaseCollections.Projects)
+    .where('uuid', '==', projectUuid)
+    .get();
+
+  return projectSnapshot.docs.pop();
 }
 
 async function getProjects(userId: string): Promise<IProject[]> {
@@ -113,11 +124,7 @@ async function createCollection(projectUuid: string, collectionName: string) {
 }
 
 async function removeCollection(projectUuid: string, collectionUuid: string) {
-  const projectSnapshot = await db.collection(DatabaseCollections.Projects)
-    .where('uuid', '==', projectUuid)
-    .get();
-
-  const projectDoc = projectSnapshot.docs.pop();
+  const projectDoc = await getProjectDocument(projectUuid);
   if (!projectDoc) {
     throw new Error('Project does not exist.');
   }
@@ -128,11 +135,7 @@ async function removeCollection(projectUuid: string, collectionUuid: string) {
 }
 
 async function createFocus(projectUuid: string, collectionUuid: string, focusName: string) {
-  const projectSnapshot = await db.collection(DatabaseCollections.Projects)
-    .where('uuid', '==', projectUuid)
-    .get();
-
-  const projectDoc = projectSnapshot.docs.pop();
+  const projectDoc = await getProjectDocument(projectUuid);
   if (!projectDoc) {
     throw new Error('Project does not exist.');
   }
