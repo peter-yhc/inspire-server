@@ -7,7 +7,7 @@ import {
   createCollection, createFocus,
   createProject,
   getProjects,
-  isObserver,
+  canEdit,
   isOwner,
   removeCollection, removeFocus,
   removeProjectUser,
@@ -51,7 +51,7 @@ projectRouter.delete('/:projectUid/users', async (context) => {
 
 projectRouter.post('/:projectUid/collections', async (context) => {
   const request = context.request.body as ICreateCollection;
-  if (await isObserver(userId, context.params.projectUid)) {
+  if (await canEdit(userId, context.params.projectUid)) {
     context.status = 401;
     return;
   }
@@ -60,7 +60,7 @@ projectRouter.post('/:projectUid/collections', async (context) => {
 });
 
 projectRouter.delete('/:projectUid/collections/:collectionUid', async (context) => {
-  if (await isObserver(userId, context.params.projectUid)) {
+  if (await canEdit(userId, context.params.projectUid)) {
     context.status = 401;
     return;
   }
@@ -70,7 +70,7 @@ projectRouter.delete('/:projectUid/collections/:collectionUid', async (context) 
 
 projectRouter.post('/:projectUid/collections/:collectionUid/focuses', async (context) => {
   const request = context.request.body as ICreateFocus;
-  if (await isObserver(userId, context.params.projectUid)) {
+  if (await canEdit(userId, context.params.projectUid)) {
     context.status = 401;
     return;
   }
@@ -79,7 +79,7 @@ projectRouter.post('/:projectUid/collections/:collectionUid/focuses', async (con
 });
 
 projectRouter.delete('/:projectUid/collections/:collectionUid/focuses/:focusUid', async (context) => {
-  if (await isObserver(userId, context.params.projectUid)) {
+  if (await canEdit(userId, context.params.projectUid)) {
     context.status = 401;
     return;
   }

@@ -29,14 +29,15 @@ export interface IProjectRoleMapping {
 }
 
 export interface IImage {
+  projectUid: string;
   locationUid: string;
   src: string;
   uid: string;
+  addedDate: string;
   comment?: string;
   metadata?: {
     favourite: boolean;
   }
-  addedDate: Date;
 }
 
 export type ProjectRole = 'Owner' | 'Editor' | 'Observer';

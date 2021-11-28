@@ -1,6 +1,5 @@
 export interface IUploadImage {
-  path: string;
+  projectUid: string;
+  locationUid: string;
   src: string;
-  hash: string;
-  name?: string;
 }

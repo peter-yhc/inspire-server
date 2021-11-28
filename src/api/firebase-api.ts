@@ -18,22 +18,33 @@ const app = admin.initializeApp(options);
 const db = admin.firestore(app);
 const auth = admin.auth(app);
 
-async function checkProjectRole(userId: string, projectUid: string, role: ProjectRole) {
+async function isOwner(userId: string, projectUid: string) {
   const projectRoleMappings = await db.collection(DatabaseCollections.ProjectRoleMappings)
     .where('userId', '==', userId)
     .where('projectUid', '==', projectUid)
-    .where('role', '==', role)
+    .where('role', '==', 'Owner')
     .get();
 
   return !!projectRoleMappings.docs.pop();
 }
 
-async function isOwner(userId: string, projectUid: string) {
-  return checkProjectRole(userId, projectUid, 'Owner');
+async function canEdit(userId: string, projectUid: string) {
+  const projectRoleMappings = await db.collection(DatabaseCollections.ProjectRoleMappings)
+    .where('userId', '==', userId)
+    .where('projectUid', '==', projectUid)
+    .where('role', 'in', ['Owner', 'Editor'])
+    .get();
+
+  return !!projectRoleMappings.docs.pop();
 }
 
-async function isObserver(userId: string, projectUid: string) {
-  return checkProjectRole(userId, projectUid, 'Observer');
+async function canRead(userId: string, projectUid: string) {
+  const projectRoleMappings = await db.collection(DatabaseCollections.ProjectRoleMappings)
+    .where('userId', '==', userId)
+    .where('projectUid', '==', projectUid)
+    .get();
+
+  return !!projectRoleMappings.docs.pop();
 }
 
 async function getProjectDocument(projectUid: string): Promise<QueryDocumentSnapshot<DocumentData> | undefined> {
@@ -170,15 +181,29 @@ async function removeFocus(projectUid: string, collectionUid: string, focusUid: 
   await db.collection(DatabaseCollections.Projects).doc(projectDoc.id).set(project);
 }
 
-async function uploadImage(locationUid: string, src: string) {
-  db.collection(DatabaseCollections.Images).add({
+async function uploadImage(projectUid: string, locationUid: string, src: string) {
+  await db.collection(DatabaseCollections.Images).add({
+    projectUid,
+    locationUid,
     src,
-
+    uid: nanoid(),
+    addedDate: new Date().toISOString(),
   } as IImage);
 }
+
+async function fetchImages(projectUid: string, locationUid: string): Promise<IImage[]> {
+  const imagesSnapshot = await db.collection(DatabaseCollections.Images)
+    .where('projectUid', '==', projectUid)
+    .where('locationUid', '==', locationUid)
+    .get();
+
+  return imagesSnapshot.docs.map((is) => is.data() as IImage);
+}
+
 export {
   isOwner,
-  isObserver,
+  canEdit,
+  canRead,
   createProject,
   getProjects,
   addProjectUser,
@@ -187,4 +212,6 @@ export {
   removeCollection,
   createFocus,
   removeFocus,
+  uploadImage,
+  fetchImages,
 };
