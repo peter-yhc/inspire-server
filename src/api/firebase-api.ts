@@ -1,7 +1,8 @@
 import * as admin from 'firebase-admin';
-import { IProject, IProjectRoleMapping, ProjectRole } from './data-interfaces';
+import {
+  DatabaseCollections, IFocus, IProject, IProjectRoleMapping, ProjectRole,
+} from './data-interfaces';
 import { v4 as uuidv4 } from 'uuid';
-import { DatabaseCollections } from './database-definitions';
 
 // eslint-disable-next-line import/no-absolute-path
 const serviceAccount = require('D:\\inspire-dev.json');
@@ -96,8 +97,74 @@ async function removeProjectUser(userEmail: string, projectUuid: string): Promis
   }
 }
 
-async function createCollection() {
+async function createCollection(projectUuid: string, collectionName: string) {
+  const projectSnapshot = await db.collection(DatabaseCollections.Projects)
+    .where('uuid', '==', projectUuid)
+    .get();
 
+  const projectDoc = projectSnapshot.docs.pop();
+  if (!projectDoc) {
+    throw new Error('Project does not exist.');
+  }
+  const project = projectDoc.data() as IProject;
+  project.collections = [...project.collections, { name: collectionName, uuid: uuidv4(), focuses: [] }];
+
+  await db.collection(DatabaseCollections.Projects).doc(projectDoc.id).set(project);
+}
+
+async function removeCollection(projectUuid: string, collectionUuid: string) {
+  const projectSnapshot = await db.collection(DatabaseCollections.Projects)
+    .where('uuid', '==', projectUuid)
+    .get();
+
+  const projectDoc = projectSnapshot.docs.pop();
+  if (!projectDoc) {
+    throw new Error('Project does not exist.');
+  }
+  const project = projectDoc.data() as IProject;
+  project.collections = project.collections.filter((collection) => collection.uuid !== collectionUuid);
+
+  await db.collection(DatabaseCollections.Projects).doc(projectDoc.id).set(project);
+}
+
+async function createFocus(projectUuid: string, collectionUuid: string, focusName: string) {
+  const projectSnapshot = await db.collection(DatabaseCollections.Projects)
+    .where('uuid', '==', projectUuid)
+    .get();
+
+  const projectDoc = projectSnapshot.docs.pop();
+  if (!projectDoc) {
+    throw new Error('Project does not exist.');
+  }
+  const project = projectDoc.data() as IProject;
+  const collection = project.collections.find((collection) => collection.uuid === collectionUuid);
+
+  if (!collection) {
+    throw new Error('Collection does not exist.');
+  }
+  collection.focuses.push({ name: focusName, uuid: uuidv4() } as IFocus);
+
+  await db.collection(DatabaseCollections.Projects).doc(projectDoc.id).set(project);
+}
+
+async function removeFocus(projectUuid: string, collectionUuid: string, focusUuid: string) {
+  const projectSnapshot = await db.collection(DatabaseCollections.Projects)
+    .where('uuid', '==', projectUuid)
+    .get();
+
+  const projectDoc = projectSnapshot.docs.pop();
+  if (!projectDoc) {
+    throw new Error('Project does not exist.');
+  }
+  const project = projectDoc.data() as IProject;
+  const collection = project.collections.find((collection) => collection.uuid === collectionUuid);
+
+  if (!collection) {
+    throw new Error('Collection does not exist.');
+  }
+  collection.focuses.filter((focus) => focus.uuid !== focusUuid);
+
+  await db.collection(DatabaseCollections.Projects).doc(projectDoc.id).set(project);
 }
 
 export {
@@ -107,4 +174,8 @@ export {
   getProjects,
   addProjectUser,
   removeProjectUser,
+  createCollection,
+  removeCollection,
+  createFocus,
+  removeFocus,
 };

@@ -1,4 +1,11 @@
-export interface ISubCollection {
+/* eslint-disable no-unused-vars */
+export enum DatabaseCollections {
+  Projects = 'Projects',
+  ProjectRoleMappings = 'ProjectRoleMappings',
+  Images = 'Images'
+}
+
+export interface IFocus {
   name: string;
   uuid: string;
 }
@@ -6,7 +13,7 @@ export interface ISubCollection {
 export interface ICollection {
   name: string;
   uuid: string;
-  subCollections: ISubCollection[];
+  focuses: IFocus[];
 }
 
 export interface IProject {

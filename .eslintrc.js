@@ -19,6 +19,9 @@ module.exports = {
     'import/extensions': [0, {}],
     'import/prefer-default-export': [0, {}],
     'max-len': [0, {}],
+    'no-shadow': [0, {}],
+    '@typescript-eslint/no-shadow': [0, {}],
+    '@typescript-eslint/no-unused-vars': [0, {}],
   },
   settings: {
     'import/resolver': {

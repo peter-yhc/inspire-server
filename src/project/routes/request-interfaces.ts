@@ -8,7 +8,7 @@ export interface ICreateCollection {
   name: string;
 }
 
-export interface ICreateSubCollection {
+export interface ICreateFocus {
   name: string;
 }
 
