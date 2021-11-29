@@ -187,14 +187,16 @@ async function removeFocus(projectUid: string, collectionUid: string, focusUid: 
   return project;
 }
 
-async function uploadImage(projectUid: string, locationUid: string, src: string) {
-  await db.collection(DatabaseCollections.Images).add({
+async function uploadImage(projectUid: string, locationUid: string, src: string): Promise<IImage> {
+  const image: IImage = {
     projectUid,
     locationUid,
     src,
     uid: nanoid(),
     addedDate: new Date().toISOString(),
-  } as IImage);
+  };
+  await db.collection(DatabaseCollections.Images).add(image);
+  return image;
 }
 
 async function fetchImages(projectUid: string, locationUid: string): Promise<IImage[]> {

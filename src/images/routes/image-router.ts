@@ -14,7 +14,7 @@ imageRouter.post('/upload-image', async (context) => {
     return;
   }
 
-  await uploadImage(request.projectUid, request.locationUid, request.src);
+  context.body = await uploadImage(request.projectUid, request.locationUid, request.src);
   context.status = 201;
 });
 
@@ -25,7 +25,6 @@ imageRouter.get('/images/:projectUid/:locationUid', async (context) => {
   }
 
   context.body = await fetchImages(context.params.projectUid, context.params.locationUid);
-  context.status = 200;
 });
 
 export default imageRouter;
