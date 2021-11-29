@@ -1,15 +1,21 @@
 import Router from '@koa/router';
 import {
-  IAddUserToProject, ICreateCollection, ICreateFocus, ICreateProject, IRemoveUserFromProject,
+  IAddUserToProject,
+  ICreateCollection,
+  ICreateFocus,
+  ICreateProject,
+  IRemoveUserFromProject,
 } from './request-interfaces';
 import {
   addProjectUser,
-  createCollection, createFocus,
+  canEdit,
+  createCollection,
+  createFocus,
   createProject,
   getProjects,
-  canEdit,
   isOwner,
-  removeCollection, removeFocus,
+  removeCollection,
+  removeFocus,
   removeProjectUser,
 } from '../../api/firebase-api';
 
@@ -51,39 +57,39 @@ projectRouter.delete('/:projectUid/users', async (context) => {
 
 projectRouter.post('/:projectUid/collections', async (context) => {
   const request = context.request.body as ICreateCollection;
-  if (await canEdit(userId, context.params.projectUid)) {
+  if (!await canEdit(userId, context.params.projectUid)) {
     context.status = 401;
     return;
   }
-  await createCollection(context.params.projectUid, request.name);
+  context.body = await createCollection(context.params.projectUid, request.name);
   context.status = 201;
 });
 
 projectRouter.delete('/:projectUid/collections/:collectionUid', async (context) => {
-  if (await canEdit(userId, context.params.projectUid)) {
+  if (!await canEdit(userId, context.params.projectUid)) {
     context.status = 401;
     return;
   }
-  await removeCollection(context.params.projectUid, context.params.collectionUid);
+  context.body = await removeCollection(context.params.projectUid, context.params.collectionUid);
   context.status = 200;
 });
 
 projectRouter.post('/:projectUid/collections/:collectionUid/focuses', async (context) => {
   const request = context.request.body as ICreateFocus;
-  if (await canEdit(userId, context.params.projectUid)) {
+  if (!await canEdit(userId, context.params.projectUid)) {
     context.status = 401;
     return;
   }
-  await createFocus(context.params.projectUid, context.params.collectionUid, request.name);
+  context.body = await createFocus(context.params.projectUid, context.params.collectionUid, request.name);
   context.status = 201;
 });
 
 projectRouter.delete('/:projectUid/collections/:collectionUid/focuses/:focusUid', async (context) => {
-  if (await canEdit(userId, context.params.projectUid)) {
+  if (!await canEdit(userId, context.params.projectUid)) {
     context.status = 401;
     return;
   }
-  await removeFocus(context.params.projectUid, context.params.collectionUid, context.params.focusUid);
+  context.body = await removeFocus(context.params.projectUid, context.params.collectionUid, context.params.focusUid);
   context.status = 200;
 });
 
