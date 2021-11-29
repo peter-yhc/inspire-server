@@ -220,4 +220,5 @@ export {
   removeFocus,
   uploadImage,
   fetchImages,
+  auth,
 };

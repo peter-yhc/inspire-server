@@ -9,7 +9,7 @@ const userId = '3z3hoEDHoQfbLZ0gPp8J4o1JpcB3';
 
 imageRouter.post('/upload-image', async (context) => {
   const request = (context.request.body as IUploadImage);
-  if (await canEdit(userId, request.projectUid)) {
+  if (!await canEdit(userId, request.projectUid)) {
     context.status = 401;
     return;
   }

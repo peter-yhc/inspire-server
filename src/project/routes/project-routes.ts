@@ -20,23 +20,23 @@ import {
 } from '../../api/firebase-api';
 
 const projectRouter = new Router({ prefix: '/projects' });
-const userId = '3z3hoEDHoQfbLZ0gPp8J4o1JpcB3';
 
 projectRouter.get('/', async (context) => {
-  const projects = await getProjects(userId);
+  const projects = await getProjects(context.token);
   context.body = JSON.stringify(projects);
+  console.log(context.body, '----');
 });
 
 projectRouter.post('/', async (context) => {
   const request = context.request.body as ICreateProject;
 
-  context.body = await createProject(userId, request.name, 'Owner');
+  context.body = await createProject(context.token, request.name, 'Owner');
   context.status = 201;
 });
 
 projectRouter.post('/:projectUid/users', async (context) => {
   const request = context.request.body as IAddUserToProject;
-  if (!await isOwner(userId, context.params.projectUid)) {
+  if (!await isOwner(context.token, context.params.projectUid)) {
     context.status = 401;
     return;
   }
@@ -47,7 +47,7 @@ projectRouter.post('/:projectUid/users', async (context) => {
 
 projectRouter.delete('/:projectUid/users', async (context) => {
   const request = context.request.body as IRemoveUserFromProject;
-  if (!await isOwner(userId, context.params.projectUid)) {
+  if (!await isOwner(context.token, context.params.projectUid)) {
     context.status = 401;
     return;
   }
@@ -57,7 +57,7 @@ projectRouter.delete('/:projectUid/users', async (context) => {
 
 projectRouter.post('/:projectUid/collections', async (context) => {
   const request = context.request.body as ICreateCollection;
-  if (!await canEdit(userId, context.params.projectUid)) {
+  if (!await canEdit(context.token, context.params.projectUid)) {
     context.status = 401;
     return;
   }
@@ -66,7 +66,7 @@ projectRouter.post('/:projectUid/collections', async (context) => {
 });
 
 projectRouter.delete('/:projectUid/collections/:collectionUid', async (context) => {
-  if (!await canEdit(userId, context.params.projectUid)) {
+  if (!await canEdit(context.token, context.params.projectUid)) {
     context.status = 401;
     return;
   }
@@ -76,7 +76,7 @@ projectRouter.delete('/:projectUid/collections/:collectionUid', async (context) 
 
 projectRouter.post('/:projectUid/collections/:collectionUid/focuses', async (context) => {
   const request = context.request.body as ICreateFocus;
-  if (!await canEdit(userId, context.params.projectUid)) {
+  if (!await canEdit(context.token, context.params.projectUid)) {
     context.status = 401;
     return;
   }
@@ -85,7 +85,7 @@ projectRouter.post('/:projectUid/collections/:collectionUid/focuses', async (con
 });
 
 projectRouter.delete('/:projectUid/collections/:collectionUid/focuses/:focusUid', async (context) => {
-  if (!await canEdit(userId, context.params.projectUid)) {
+  if (!await canEdit(context.token, context.params.projectUid)) {
     context.status = 401;
     return;
   }
