@@ -208,6 +208,18 @@ async function fetchImages(projectUid: string, locationUid: string): Promise<IIm
   return imagesSnapshot.docs.map((is) => is.data() as IImage);
 }
 
+async function removeImages(projectUid: string, locationUid: string, imageUids: string[]) {
+  const imageSnapshot = await db.collection(DatabaseCollections.Images)
+    .where('projectUid', '==', projectUid)
+    .where('locationUid', '==', locationUid)
+    .where('uid', 'in', imageUids)
+    .get();
+
+  imageSnapshot.docs.forEach((doc) => {
+    db.collection(DatabaseCollections.Images).doc(doc.id).delete();
+  });
+}
+
 export {
   isOwner,
   canEdit,
@@ -222,5 +234,6 @@ export {
   removeFocus,
   uploadImage,
   fetchImages,
+  removeImages,
   auth,
 };

@@ -3,3 +3,7 @@ export interface IUploadImage {
   locationUid: string;
   src: string;
 }
+
+export interface IDeleteImages {
+  uids: string[]
+}

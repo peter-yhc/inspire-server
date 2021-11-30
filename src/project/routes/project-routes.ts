@@ -24,7 +24,6 @@ const projectRouter = new Router({ prefix: '/projects' });
 projectRouter.get('/', async (context) => {
   const projects = await getProjects(context.token);
   context.body = JSON.stringify(projects);
-  console.log(context.body, '----');
 });
 
 projectRouter.post('/', async (context) => {
