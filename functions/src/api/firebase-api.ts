@@ -1,20 +1,20 @@
 import * as admin from 'firebase-admin';
+import { firestore } from 'firebase-admin';
+import { nanoid } from 'nanoid';
 import {
   DatabaseCollections, ICollection, IFocus, IImage, IProject, IProjectRoleMapping, ProjectRole,
 } from './data-interfaces';
-import { firestore } from 'firebase-admin';
-import { nanoid } from 'nanoid';
 import QueryDocumentSnapshot = firestore.QueryDocumentSnapshot;
 import DocumentData = firestore.DocumentData;
 
 // eslint-disable-next-line import/no-absolute-path
-const serviceAccount = require('D:\\inspire-dev.json');
+// const serviceAccount = require('D:\\inspire-dev.json');
+//
+// const options = process.env.NODE_ENV !== 'production'
+//   ? { credential: admin.credential.cert(serviceAccount) }
+//   : undefined;
 
-const options = process.env.NODE_ENV !== 'production'
-  ? { credential: admin.credential.cert(serviceAccount) }
-  : undefined;
-
-const app = admin.initializeApp(options);
+const app = admin.initializeApp();
 const db = admin.firestore(app);
 const auth = admin.auth(app);
 

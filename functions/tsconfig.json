@@ -9,7 +9,7 @@
     "strictNullChecks": true,
     "strictFunctionTypes": true,
     "skipLibCheck": true,
-    "outDir": "./build"
+//    "outDir": "./build"
   },
   "include": ["src", "./custom.d.ts"],
   "exclude": ["node_modules"]

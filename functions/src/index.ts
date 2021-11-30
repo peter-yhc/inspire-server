@@ -1,17 +1,18 @@
-import bodyParser from 'koa-bodyparser';
 import Koa from 'koa';
 import cors from '@koa/cors';
+import * as functions from 'firebase-functions';
 import { AuthRouter } from './auth';
 import { ProjectRouter } from './project';
 import { ImageRouter } from './images';
 import { auth } from './api/firebase-api';
 
-const port = 8081;
 const app = new Koa();
-
 app.use(cors());
-app.use(bodyParser());
-
+app.use(async (context, next) => {
+  // @ts-ignore
+  context.request.body = context.req.body;
+  await next();
+});
 app.use(async (context, next) => {
   const authHeader = context.request.headers.authorization as string;
   if (authHeader) {
@@ -26,6 +27,4 @@ app.use(AuthRouter.routes());
 app.use(ProjectRouter.routes());
 app.use(ImageRouter.routes());
 
-app.listen(port);
-
-console.info(`App started on port ${port}`);
+exports.app = functions.region('australia-southeast1').https.onRequest(app.callback());
