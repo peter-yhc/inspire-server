@@ -36,3 +36,4 @@ yarn-error.log*
 .vercel
 
 ui-debug.log
+functions/src/**/*.js

@@ -8,13 +8,13 @@ import QueryDocumentSnapshot = firestore.QueryDocumentSnapshot;
 import DocumentData = firestore.DocumentData;
 
 // eslint-disable-next-line import/no-absolute-path
-// const serviceAccount = require('D:\\inspire-dev.json');
-//
-// const options = process.env.NODE_ENV !== 'production'
-//   ? { credential: admin.credential.cert(serviceAccount) }
-//   : undefined;
+const serviceAccount = require('D:\\inspire-dev.json');
 
-const app = admin.initializeApp();
+const options = process.env.NODE_ENV !== 'production'
+  ? { credential: admin.credential.cert(serviceAccount) }
+  : undefined;
+
+const app = admin.initializeApp(options);
 const db = admin.firestore(app);
 const auth = admin.auth(app);
 
