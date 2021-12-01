@@ -22,16 +22,12 @@ import {
 const projectRouter = new Router({ prefix: '/projects' });
 
 projectRouter.get('/', async (context) => {
-  console.log('get projects');
   const projects = await getProjects(context.token);
   context.body = JSON.stringify(projects);
 });
 
 projectRouter.post('/', async (context) => {
-  console.log('create projects');
-
   const request = context.request.body as ICreateProject;
-  console.log('create projects request', request);
 
   context.body = await createProject(context.token, request.name, 'Owner');
   context.status = 201;

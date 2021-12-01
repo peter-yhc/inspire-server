@@ -7,3 +7,10 @@ export interface IUploadImage {
 export interface IDeleteImages {
   uids: string[]
 }
+
+export interface IUpdateImage {
+  comment?: string;
+  metadata?: {
+    favourite: boolean;
+  }
+}

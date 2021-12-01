@@ -1,6 +1,7 @@
 import Koa from 'koa';
 import cors from '@koa/cors';
 import * as functions from 'firebase-functions';
+import bodyParser from 'koa-bodyparser';
 import { AuthRouter } from './auth';
 import { ProjectRouter } from './project';
 import { ImageRouter } from './images';
@@ -8,11 +9,15 @@ import { auth } from './api/firebase-api';
 
 const app = new Koa();
 app.use(cors());
-app.use(async (context, next) => {
-  // @ts-ignore
-  context.request.body = context.req.body;
-  await next();
-});
+if (process.env.NODE_ENV === 'dev') {
+  app.use(bodyParser());
+} else {
+  app.use(async (context, next) => {
+    // @ts-ignore
+    context.request.body = context.req.body;
+    await next();
+  });
+}
 app.use(async (context, next) => {
   const authHeader = context.request.headers.authorization as string;
   if (authHeader) {
@@ -26,6 +31,8 @@ app.use(async (context, next) => {
 app.use(AuthRouter.routes());
 app.use(ProjectRouter.routes());
 app.use(ImageRouter.routes());
+
+console.log(ImageRouter.stack.map((i) => i.path));
 
 if (process.env.NODE_ENV === 'dev') {
   app.listen(8081);

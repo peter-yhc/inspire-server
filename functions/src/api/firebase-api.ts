@@ -6,6 +6,7 @@ import {
 } from './data-interfaces';
 import QueryDocumentSnapshot = firestore.QueryDocumentSnapshot;
 import DocumentData = firestore.DocumentData;
+import { IUpdateImage } from '../images/routes/image-requests';
 
 let options;
 if (process.env.NODE_ENV === 'dev') {
@@ -220,6 +221,26 @@ async function removeImages(projectUid: string, locationUid: string, imageUids: 
   });
 }
 
+async function updateImage(projectUid: string, locationUid: string, imageUid: string, update: IUpdateImage): Promise<IImage> {
+  const imageSnapshot = await db.collection(DatabaseCollections.Images)
+    .where('projectUid', '==', projectUid)
+    .where('locationUid', '==', locationUid)
+    .where('uid', '==', imageUid)
+    .get();
+
+  const imageDoc = imageSnapshot.docs.pop();
+  if (!imageDoc) {
+    throw new Error(`Image ${imageUid} does not exist.`);
+  }
+  const imageData = {
+    ...imageDoc.data(),
+    ...(update.comment) && { comment: update.comment },
+    ...(update.metadata) && { metadata: update.metadata },
+  } as IImage;
+  await db.collection(DatabaseCollections.Images).doc(imageDoc.id).set(imageData);
+  return imageData;
+}
+
 export {
   isOwner,
   canEdit,
@@ -235,5 +256,6 @@ export {
   uploadImage,
   fetchImages,
   removeImages,
+  updateImage,
   auth,
 };
