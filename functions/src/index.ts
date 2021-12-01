@@ -27,6 +27,9 @@ app.use(AuthRouter.routes());
 app.use(ProjectRouter.routes());
 app.use(ImageRouter.routes());
 
-app.listen(8081);
+if (process.env.NODE_ENV === 'dev') {
+  app.listen(8081);
+  console.info('app started on port 8081');
+}
 
 exports.app = functions.region('australia-southeast1').https.onRequest(app.callback());

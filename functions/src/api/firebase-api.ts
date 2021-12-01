@@ -7,12 +7,12 @@ import {
 import QueryDocumentSnapshot = firestore.QueryDocumentSnapshot;
 import DocumentData = firestore.DocumentData;
 
-// eslint-disable-next-line import/no-absolute-path
-const serviceAccount = require('D:\\inspire-dev.json');
-
-const options = process.env.NODE_ENV !== 'production'
-  ? { credential: admin.credential.cert(serviceAccount) }
-  : undefined;
+let options;
+if (process.env.NODE_ENV === 'dev') {
+// eslint-disable-next-line import/no-absolute-path,global-require
+  const serviceAccount = require('D:\\inspire-dev.json');
+  options = { credential: admin.credential.cert(serviceAccount) };
+}
 
 const app = admin.initializeApp(options);
 const db = admin.firestore(app);
