@@ -1,3 +1,4 @@
+/* eslint-disable import/no-import-module-exports */
 import Koa from 'koa';
 import cors from '@koa/cors';
 import * as functions from 'firebase-functions';
@@ -31,8 +32,6 @@ app.use(async (context, next) => {
 app.use(AuthRouter.routes());
 app.use(ProjectRouter.routes());
 app.use(ImageRouter.routes());
-
-console.log(ImageRouter.stack.map((i) => i.path));
 
 if (process.env.NODE_ENV === 'dev') {
   app.listen(8081);

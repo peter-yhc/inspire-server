@@ -7,6 +7,7 @@ import {
 import QueryDocumentSnapshot = firestore.QueryDocumentSnapshot;
 import DocumentData = firestore.DocumentData;
 import { IUpdateImage } from '../images/routes/image-requests';
+import FieldValue = firestore.FieldValue;
 
 let options;
 if (process.env.NODE_ENV === 'dev') {
@@ -241,6 +242,28 @@ async function updateImage(projectUid: string, locationUid: string, imageUid: st
   return imageData;
 }
 
+async function removeImageComment(projectUid: string, locationUid: string, imageUid: string): Promise<IImage> {
+  const imageSnapshot = await db.collection(DatabaseCollections.Images)
+    .where('projectUid', '==', projectUid)
+    .where('locationUid', '==', locationUid)
+    .where('uid', '==', imageUid)
+    .get();
+
+  const imageDoc = imageSnapshot.docs.pop();
+  if (!imageDoc) {
+    throw new Error(`Image ${imageUid} does not exist.`);
+  }
+
+  const imageData = {
+    ...imageDoc.data(),
+    comment: undefined,
+  } as IImage;
+  await db.collection(DatabaseCollections.Images).doc(imageDoc.id).update({ comment: FieldValue.delete() });
+
+  delete imageData.comment;
+  return imageData;
+}
+
 export {
   isOwner,
   canEdit,
@@ -257,5 +280,6 @@ export {
   fetchImages,
   removeImages,
   updateImage,
+  removeImageComment,
   auth,
 };
