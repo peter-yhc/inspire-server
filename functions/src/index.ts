@@ -7,6 +7,7 @@ import { AuthRouter } from './auth';
 import { ProjectRouter } from './project';
 import { ImageRouter } from './images';
 import { auth } from './api/firebase-api';
+import { whitelistedRoutes } from './route-whitelist';
 
 const app = new Koa();
 app.use(cors());
@@ -19,12 +20,17 @@ if (process.env.NODE_ENV === 'dev') {
     await next();
   });
 }
-app.use(async (context, next) => {
-  const authHeader = context.request.headers.authorization as string;
+
+app.use(async (ctx, next) => {
+  if (whitelistedRoutes.includes(ctx.request.url)) {
+    await next();
+    return;
+  }
+  const authHeader = ctx.request.headers.authorization as string;
   if (authHeader) {
     const token = authHeader.split('Bearer ')[1];
     const decodedToken = await auth.verifyIdToken(token);
-    context.token = decodedToken.user_id;
+    ctx.token = decodedToken.user_id;
     await next();
   }
 });
