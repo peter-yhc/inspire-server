@@ -12,7 +12,8 @@ import { whitelistedRoutes } from './route-whitelist';
 const app = new Koa();
 app.use(cors());
 if (process.env.NODE_ENV === 'dev') {
-  app.use(bodyParser());
+  app.use(bodyParser({ jsonLimit: '10mb' }));
+  console.info('running with body parser');
 } else {
   app.use(async (context, next) => {
     // @ts-ignore

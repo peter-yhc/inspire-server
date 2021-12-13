@@ -2,7 +2,9 @@ import Router from '@koa/router';
 import {
   canEdit, canRead, fetchImages, removeImageComment, removeImages, updateImage, uploadImage,
 } from '../../api/firebase-api';
-import { IDeleteImages, IUpdateImage, IUploadImage } from './image-requests';
+import {
+  IDeleteImages, IUpdateImage, IUploadImage,
+} from './image-requests';
 
 const imageRouter = new Router();
 
@@ -13,7 +15,7 @@ imageRouter.post('/images', async (context) => {
     return;
   }
 
-  context.body = await uploadImage(request.projectUid, request.locationUid, request.src);
+  context.body = await uploadImage(request.projectUid, request.locationUid, request.src, request.fileName);
   context.status = 201;
 });
 

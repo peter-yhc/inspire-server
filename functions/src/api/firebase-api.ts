@@ -1,6 +1,7 @@
 import * as admin from 'firebase-admin';
 import { firestore } from 'firebase-admin';
 import { nanoid } from 'nanoid';
+import fs from 'fs';
 import {
   DatabaseCollections, ICollection, IFocus, IImage, IProject, IProjectRoleMapping, ProjectRole,
 } from './data-interfaces';
@@ -16,9 +17,11 @@ if (process.env.NODE_ENV === 'dev') {
   options = { credential: admin.credential.cert(serviceAccount) };
 }
 
+const bucketName = 'inspire-dev-ad92f.appspot.com';
 const app = admin.initializeApp(options);
 const db = admin.firestore(app);
 const auth = admin.auth(app);
+const store = admin.storage(app);
 
 async function isOwner(userId: string, projectUid: string) {
   const projectRoleMappings = await db.collection(DatabaseCollections.ProjectRoleMappings)
@@ -189,11 +192,32 @@ async function removeFocus(projectUid: string, collectionUid: string, focusUid: 
   return project;
 }
 
-async function uploadImage(projectUid: string, locationUid: string, src: string): Promise<IImage> {
+async function uploadImage(projectUid: string, locationUid: string, src: string, fileName: string): Promise<IImage> {
+  let imageData = src;
+  if (!imageData.includes('http')) {
+    const path = `${process.env.TMP}\\${fileName}`;
+
+    const buff = Buffer.from(imageData, 'base64');
+    fs.writeFileSync(path, buff);
+    const extension = fileName.split('.')[1];
+    const [storageFile] = await store
+      .bucket(bucketName)
+      .upload(path, {
+        gzip: true,
+        metadata: {
+          firebaseStorageDownloadTokens: nanoid(),
+          contentType: `image/${extension}`,
+        },
+      });
+
+    await storageFile.makePublic();
+    imageData = storageFile.publicUrl();
+  }
+
   const image: IImage = {
     projectUid,
     locationUid,
-    src,
+    src: imageData,
     uid: nanoid(),
     addedDate: new Date().toISOString(),
   };
