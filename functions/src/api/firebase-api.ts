@@ -22,6 +22,7 @@ const app = admin.initializeApp(options);
 const db = admin.firestore(app);
 const auth = admin.auth(app);
 const store = admin.storage(app);
+const tempFolder = process.env.TMP || '/tmp';
 
 async function isOwner(userId: string, projectUid: string) {
   const projectRoleMappings = await db.collection(DatabaseCollections.ProjectRoleMappings)
@@ -195,7 +196,7 @@ async function removeFocus(projectUid: string, collectionUid: string, focusUid: 
 async function uploadImage(projectUid: string, locationUid: string, src: string, fileName: string): Promise<IImage> {
   let imageData = src;
   if (!imageData.includes('http')) {
-    const path = `${process.env.TMP}\\${fileName}`;
+    const path = `${tempFolder}/${fileName}`;
 
     const buff = Buffer.from(imageData, 'base64');
     fs.writeFileSync(path, buff);
