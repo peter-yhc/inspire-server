@@ -1,9 +1,9 @@
 import Router from '@koa/router';
 import {
-  canEdit, canRead, fetchImages, removeImageComment, removeImages, updateImage, uploadImage,
+  canEdit, canRead, fetchImages, moveImages, removeImageComment, removeImages, updateImage, uploadImage,
 } from '../../api/firebase-api';
 import {
-  IDeleteImages, IUpdateImage, IUploadImage,
+  IDeleteImages, IMoveBatchImages, IUpdateImage, IUploadImage,
 } from './image-requests';
 
 const imageRouter = new Router();
@@ -49,6 +49,21 @@ imageRouter.put('/images/:projectUid/:locationUid/:imageUid', async (context) =>
     context.params.projectUid,
     context.params.locationUid,
     context.params.imageUid,
+    request,
+  );
+  context.status = 200;
+});
+
+imageRouter.put('/images/:projectUid/:locationUid', async (context) => {
+  if (!await canEdit(context.token, context.params.projectUid)) {
+    context.status = 401;
+    return;
+  }
+
+  const request = context.request.body as IMoveBatchImages;
+  context.body = await moveImages(
+    context.params.projectUid,
+    context.params.locationUid,
     request,
   );
   context.status = 200;

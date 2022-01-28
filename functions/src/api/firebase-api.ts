@@ -7,7 +7,7 @@ import {
 } from './data-interfaces';
 import QueryDocumentSnapshot = firestore.QueryDocumentSnapshot;
 import DocumentData = firestore.DocumentData;
-import { IUpdateImage } from '../images/routes/image-requests';
+import { IMoveBatchImages, IUpdateImage } from '../images/routes/image-requests';
 import FieldValue = firestore.FieldValue;
 
 let options;
@@ -289,6 +289,24 @@ async function removeImageComment(projectUid: string, locationUid: string, image
   return imageData;
 }
 
+async function moveImages(projectUid: string, locationUid: string, update: IMoveBatchImages): Promise<IImage[]> {
+  const imageSnapshot = await db.collection(DatabaseCollections.Images)
+    .where('projectUid', '==', projectUid)
+    .where('locationUid', '==', locationUid)
+    .where('uid', 'in', update.imageUids)
+    .get();
+
+  const result: IImage[] = [];
+
+  imageSnapshot.docs.forEach((doc) => {
+    const imageData = { ...doc.data(), locationUid: update.newLocationUid } as IImage;
+    db.collection(DatabaseCollections.Images).doc(doc.id).set(imageData);
+    result.push(imageData);
+  });
+
+  return result;
+}
+
 export {
   isOwner,
   canEdit,
@@ -306,5 +324,6 @@ export {
   removeImages,
   updateImage,
   removeImageComment,
+  moveImages,
   auth,
 };

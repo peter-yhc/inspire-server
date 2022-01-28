@@ -10,8 +10,14 @@ export interface IDeleteImages {
 }
 
 export interface IUpdateImage {
+  newLocationUuid?: string;
   comment?: string;
   metadata?: {
     favourite: boolean;
   }
+}
+
+export interface IMoveBatchImages {
+  imageUids: string[];
+  newLocationUid: string;
 }
