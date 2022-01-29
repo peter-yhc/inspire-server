@@ -7,7 +7,7 @@ import {
 } from './data-interfaces';
 import QueryDocumentSnapshot = firestore.QueryDocumentSnapshot;
 import DocumentData = firestore.DocumentData;
-import { IMoveBatchImages, IUpdateImage } from '../images/routes/image-requests';
+import { ICopyBatchImages, IMoveBatchImages, IUpdateImage } from '../images/routes/image-requests';
 import FieldValue = firestore.FieldValue;
 
 let options;
@@ -307,6 +307,33 @@ async function moveImages(projectUid: string, locationUid: string, update: IMove
   return result;
 }
 
+async function copyImages(projectUid: string, locationUid: string, copy: ICopyBatchImages): Promise<IImage[]> {
+  const imageSnapshot = await db.collection(DatabaseCollections.Images)
+    .where('projectUid', '==', projectUid)
+    .where('locationUid', '==', locationUid)
+    .where('uid', 'in', copy.imageUids)
+    .get();
+
+  const result: IImage[] = [];
+
+  imageSnapshot.docs.forEach((doc) => {
+    const { src, comment, metadata } = doc.data();
+    const image: IImage = {
+      projectUid,
+      locationUid: copy.toLocationUid,
+      src,
+      uid: nanoid(),
+      addedDate: new Date().toISOString(),
+      ...(comment) && { comment },
+      ...(metadata) && { metadata },
+    };
+
+    db.collection(DatabaseCollections.Images).add(image);
+    result.push(image);
+  });
+  return result;
+}
+
 export {
   isOwner,
   canEdit,
@@ -325,5 +352,6 @@ export {
   updateImage,
   removeImageComment,
   moveImages,
+  copyImages,
   auth,
 };

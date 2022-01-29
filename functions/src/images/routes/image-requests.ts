@@ -21,3 +21,8 @@ export interface IMoveBatchImages {
   imageUids: string[];
   newLocationUid: string;
 }
+
+export interface ICopyBatchImages {
+  imageUids: string[];
+  toLocationUid: string;
+}
