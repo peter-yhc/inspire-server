@@ -9,6 +9,7 @@ import QueryDocumentSnapshot = firestore.QueryDocumentSnapshot;
 import DocumentData = firestore.DocumentData;
 import { ICopyBatchImages, IMoveBatchImages, IUpdateImage } from '../images/routes/image-requests';
 import FieldValue = firestore.FieldValue;
+import { ICollectionResponse, IFocusResponse, IProjectResponse } from '../project/routes/project-requests';
 
 let options;
 if (process.env.NODE_ENV === 'dev') {
@@ -61,7 +62,64 @@ async function getProjectDocument(projectUid: string): Promise<QueryDocumentSnap
   return projectSnapshot.docs.pop();
 }
 
-async function getProjects(userId: string): Promise<IProject[]> {
+async function getFocuses(collection: ICollection, projectUid: string): Promise<IFocusResponse[]|null> {
+  if (!collection.focuses) {
+    return null;
+  }
+  return Promise.all(collection.focuses.map(async (focus) => {
+    const imageCountDoc = await db.collection(DatabaseCollections.Images)
+      .where('projectUid', '==', projectUid)
+      .where('locationUid', '==', focus.uid)
+      .get();
+    const imageCount = imageCountDoc.docs.length;
+
+    const lastActiveDoc = await db.collection(DatabaseCollections.Images)
+      .where('projectUid', '==', projectUid)
+      .where('locationUid', '==', focus.uid)
+      .orderBy('addedDate', 'desc')
+      .limit(1)
+      .get();
+    const lastActiveString = (lastActiveDoc.docs.pop()?.data() as IImage)?.addedDate;
+
+    return {
+      ...focus,
+      createdAt: new Date(focus.createdAt),
+      imageCount,
+      lastActive: lastActiveString ? new Date(lastActiveString) : null,
+    } as IFocusResponse;
+  }));
+}
+
+async function getCollections(project: IProject) {
+  if (!project.collections) {
+    return [];
+  }
+  return Promise.all(project.collections.map(async (collection) => {
+    const imageCountDoc = await db.collection(DatabaseCollections.Images)
+      .where('projectUid', '==', project.uid)
+      .where('locationUid', '==', collection.uid)
+      .get();
+    const imageCount = imageCountDoc.docs.length;
+
+    const lastActiveDoc = await db.collection(DatabaseCollections.Images)
+      .where('projectUid', '==', project.uid)
+      .where('locationUid', '==', collection.uid)
+      .orderBy('addedDate', 'desc')
+      .limit(1)
+      .get();
+    const lastActiveString = (lastActiveDoc.docs.pop()?.data() as IImage).addedDate;
+
+    return {
+      ...collection,
+      imageCount,
+      createdAt: new Date(collection.createdAt),
+      lastActive: new Date(lastActiveString),
+      focuses: await getFocuses(collection, project.uid),
+    } as ICollectionResponse;
+  }));
+}
+
+async function getProjects(userId: string): Promise<IProjectResponse[]> {
   const projectRoleMappings = await db.collection(DatabaseCollections.ProjectRoleMappings)
     .where('userId', '==', userId)
     .get();
@@ -72,7 +130,15 @@ async function getProjects(userId: string): Promise<IProject[]> {
     .where('uid', 'in', projectUids)
     .get();
 
-  return projectSnapshot.docs.map((project) => project.data()) as IProject[];
+  return Promise.all(projectSnapshot.docs.map(async (project) => {
+    const projectData = project.data() as IProject;
+
+    return {
+      ...projectData,
+      createdAt: new Date(projectData.createdAt),
+      collections: await getCollections(projectData),
+    } as IProjectResponse;
+  }));
 }
 
 async function createProject(userId: string, name: string, role: ProjectRole): Promise<IProject> {
@@ -85,6 +151,7 @@ async function createProject(userId: string, name: string, role: ProjectRole): P
     name,
     uid: projectUid,
     collections: [],
+    createdAt: new Date().toISOString(),
   };
 }
 
@@ -135,7 +202,9 @@ async function createCollection(projectUid: string, collectionName: string): Pro
     throw new Error('Project does not exist.');
   }
   const project = projectDoc.data() as IProject;
-  const newCollection = { name: collectionName, uid: nanoid(), focuses: [] };
+  const newCollection = {
+    name: collectionName, uid: nanoid(), createdAt: new Date().toISOString(), focuses: [],
+  };
   project.collections = [...project.collections, newCollection];
 
   await db.collection(DatabaseCollections.Projects).doc(projectDoc.id).set(project);
@@ -165,7 +234,7 @@ async function createFocus(projectUid: string, collectionUid: string, focusName:
   if (!collection) {
     throw new Error('Collection does not exist.');
   }
-  const newFocus: IFocus = { name: focusName, uid: nanoid() };
+  const newFocus: IFocus = { name: focusName, uid: nanoid(), createdAt: new Date().toISOString() };
   collection.focuses.push(newFocus);
 
   await db.collection(DatabaseCollections.Projects).doc(projectDoc.id).set(project);

@@ -8,17 +8,20 @@ export enum DatabaseCollections {
 export interface IFocus {
   name: string;
   uid: string;
+  createdAt: string;
 }
 
 export interface ICollection {
   name: string;
   uid: string;
+  createdAt: string;
   focuses: IFocus[];
 }
 
 export interface IProject {
   name: string;
   uid: string;
+  createdAt: string;
   collections: ICollection[]
 }
 

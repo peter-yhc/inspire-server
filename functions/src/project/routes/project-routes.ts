@@ -4,8 +4,9 @@ import {
   ICreateCollection,
   ICreateFocus,
   ICreateProject,
+  IProjectResponse,
   IRemoveUserFromProject,
-} from './request-interfaces';
+} from './project-requests';
 import {
   addProjectUser,
   canEdit,
@@ -22,8 +23,7 @@ import {
 const projectRouter = new Router({ prefix: '/projects' });
 
 projectRouter.get('/', async (context) => {
-  const projects = await getProjects(context.token);
-  context.body = JSON.stringify(projects);
+  context.body = await getProjects(context.token);
 });
 
 projectRouter.post('/', async (context) => {

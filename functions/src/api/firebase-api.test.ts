@@ -42,8 +42,16 @@ xdescribe('api test', () => {
         return {
           get: () => Promise.resolve({
             docs: [
-              { data: () => ({ uid: 'abc', name: 'test 1', collections: [] } as IProject) },
-              { data: () => ({ uid: 'def', name: 'test 2', collections: [] } as IProject) },
+              {
+                data: () => ({
+                  uid: 'abc', name: 'test 1', collections: [], createdAt: new Date().toISOString(),
+                } as IProject),
+              },
+              {
+                data: () => ({
+                  uid: 'def', name: 'test 2', collections: [], createdAt: new Date().toISOString(),
+                } as IProject),
+              },
             ],
           }),
         };
