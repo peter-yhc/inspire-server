@@ -10,7 +10,15 @@ export interface ICreateCollection {
   name: string;
 }
 
+export interface IUpdateCollection {
+  name: string;
+}
+
 export interface ICreateFocus {
+  name: string;
+}
+
+export interface IUpdateFocus {
   name: string;
 }
 

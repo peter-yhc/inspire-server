@@ -4,8 +4,9 @@ import {
   ICreateCollection,
   ICreateFocus,
   ICreateProject,
-  IProjectResponse,
   IRemoveUserFromProject,
+  IUpdateCollection,
+  IUpdateFocus,
 } from './project-requests';
 import {
   addProjectUser,
@@ -17,7 +18,7 @@ import {
   isOwner,
   removeCollection,
   removeFocus,
-  removeProjectUser,
+  removeProjectUser, updateCollection, updateFocus,
 } from '../../api/firebase-api';
 
 const projectRouter = new Router({ prefix: '/projects' });
@@ -65,6 +66,16 @@ projectRouter.post('/:projectUid/collections', async (context) => {
   context.status = 201;
 });
 
+projectRouter.put('/:projectUid/collections/:collectionUid', async (context) => {
+  const request = context.request.body as IUpdateCollection;
+  if (!await canEdit(context.token, context.params.projectUid)) {
+    context.status = 401;
+    return;
+  }
+  context.body = await updateCollection(context.params.projectUid, context.params.collectionUid, request.name);
+  context.status = 200;
+});
+
 projectRouter.delete('/:projectUid/collections/:collectionUid', async (context) => {
   if (!await canEdit(context.token, context.params.projectUid)) {
     context.status = 401;
@@ -82,6 +93,16 @@ projectRouter.post('/:projectUid/collections/:collectionUid/focuses', async (con
   }
   context.body = await createFocus(context.params.projectUid, context.params.collectionUid, request.name);
   context.status = 201;
+});
+
+projectRouter.put('/:projectUid/collections/:collectionUid/focuses/:focusUid', async (context) => {
+  const request = context.request.body as IUpdateFocus;
+  if (!await canEdit(context.token, context.params.projectUid)) {
+    context.status = 401;
+    return;
+  }
+  context.body = await updateFocus(context.params.projectUid, context.params.collectionUid, context.params.focusUid, request.name);
+  context.status = 200;
 });
 
 projectRouter.delete('/:projectUid/collections/:collectionUid/focuses/:focusUid', async (context) => {

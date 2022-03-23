@@ -211,6 +211,23 @@ async function createCollection(projectUid: string, collectionName: string): Pro
   return newCollection;
 }
 
+async function updateCollection(projectUid: string, collectionUid: string, collectionName: string): Promise<ICollection> {
+  const projectDoc = await getProjectDocument(projectUid);
+  if (!projectDoc) {
+    throw new Error('Project does not exist.');
+  }
+  const project = projectDoc.data() as IProject;
+
+  const collection = project.collections.find((c) => c.uid === collectionUid);
+  if (!collection) {
+    throw new Error('Collection does not exist.');
+  }
+
+  collection.name = collectionName;
+  await db.collection(DatabaseCollections.Projects).doc(projectDoc.id).set(project);
+  return collection;
+}
+
 async function removeCollection(projectUid: string, collectionUid: string) {
   const projectDoc = await getProjectDocument(projectUid);
   if (!projectDoc) {
@@ -239,6 +256,29 @@ async function createFocus(projectUid: string, collectionUid: string, focusName:
 
   await db.collection(DatabaseCollections.Projects).doc(projectDoc.id).set(project);
   return newFocus;
+}
+
+async function updateFocus(projectUid: string, collectionUid: string, focusUid: string, focusName: string) {
+  const projectDoc = await getProjectDocument(projectUid);
+  if (!projectDoc) {
+    throw new Error('Project does not exist.');
+  }
+  const project = projectDoc.data() as IProject;
+
+  const collection = project.collections.find((collection) => collection.uid === collectionUid);
+  if (!collection) {
+    throw new Error('Collection does not exist.');
+  }
+
+  const focus = collection.focuses.find((focus) => focus.uid !== focusUid);
+  if (!focus) {
+    throw new Error('Focus does not exist.');
+  }
+
+  focus.name = focusName;
+
+  await db.collection(DatabaseCollections.Projects).doc(projectDoc.id).set(project);
+  return project;
 }
 
 async function removeFocus(projectUid: string, collectionUid: string, focusUid: string) {
@@ -412,8 +452,10 @@ export {
   addProjectUser,
   removeProjectUser,
   createCollection,
+  updateCollection,
   removeCollection,
   createFocus,
+  updateFocus,
   removeFocus,
   uploadImage,
   fetchImages,

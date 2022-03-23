@@ -7,8 +7,8 @@
     "test": "jest ./src --passWithNoTests",
     "lint": "npx eslint src/**/* --fix",
     "build": "npx tsc",
-    "dev": "cross-env NODE_ENV=dev nodemon --watch ./src/**/*.ts --exec ts-node ./src/index.ts",
-    "stg": "cross-env NODE_ENV=stg nodemon --watch ./src/**/*.ts --exec ts-node ./src/index.ts"
+    "dev": "cross-env NODE_ENV=dev nodemon --watch ./src/**/*.ts --exec npx ts-node ./src/index.ts",
+    "stg": "cross-env NODE_ENV=stg nodemon --watch ./src/**/*.ts --exec npx ts-node ./src/index.ts"
   },
   "repository": {
     "type": "git",
